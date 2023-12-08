@@ -44,8 +44,6 @@ class AuthenticationActivity : AppCompatActivity() {
         binding.viewModel = viewModel
         binding.lifecycleOwner = this
 
-        observeAuthenticationState()
-
         viewModel.loginEvent.observe(this) { loginEvent ->
             if (loginEvent) {
                 launchSignInFlow()
@@ -58,6 +56,16 @@ class AuthenticationActivity : AppCompatActivity() {
                 loginButtonNotClickYet = buttonNotClickedYet
             }
         }
+
+        /** I don't know why but if I don't set this delay the app behaves in the following way,
+         * I can log in and log out every time without a problem and nothing strange happens,
+         * but if I log in, I close the app and run it again when I click the log out the app goes
+         * to AuthenticationActivity but immediately returns to the RemindersActivity. My theory
+         * is that the viewModel observer does not have time to make the change between
+         * AUTHENTICATED and UNAUTHENTICATED and manages to still interpret it as AUTHENTICATED
+         * although it is no longer like that. Likewise, I would love to know why this happens :). */
+        Thread.sleep(100)
+        observeAuthenticationState()
 
         // TODO: a bonus is to customize the sign in flow to look nice using :
         // https://github.com/firebase/FirebaseUI-Android/blob/master/auth/README.md#custom-layout
@@ -90,7 +98,7 @@ class AuthenticationActivity : AppCompatActivity() {
                     if (!loginButtonNotClickYet) {
                         Snackbar.make(
                             findViewById(android.R.id.content),
-                            "You do not complete the login process. Try again.",
+                            "You have not successfully completed the login process. Try again.",
                             Snackbar.LENGTH_SHORT,
                         ).show()
                     }
