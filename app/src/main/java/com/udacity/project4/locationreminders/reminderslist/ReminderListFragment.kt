@@ -1,16 +1,29 @@
 package com.udacity.project4.locationreminders.reminderslist
 
+import android.Manifest
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Bundle
-import android.view.*
+import android.provider.Settings
+import android.view.LayoutInflater
+import android.view.Menu
+import android.view.MenuInflater
+import android.view.MenuItem
+import android.view.View
+import android.view.ViewGroup
+import androidx.activity.addCallback
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
 import androidx.databinding.DataBindingUtil
 import com.firebase.ui.auth.AuthUI
+import com.google.android.material.snackbar.Snackbar
 import com.udacity.project4.R
 import com.udacity.project4.authentication.AuthenticationActivity
 import com.udacity.project4.base.BaseFragment
 import com.udacity.project4.base.NavigationCommand
 import com.udacity.project4.databinding.FragmentRemindersBinding
-import com.udacity.project4.locationreminders.RemindersActivity
 import com.udacity.project4.utils.setDisplayHomeAsUpEnabled
 import com.udacity.project4.utils.setTitle
 import com.udacity.project4.utils.setup
@@ -21,6 +34,15 @@ class ReminderListFragment : BaseFragment() {
     // Use Koin to retrieve the ViewModel instance
     override val _viewModel: RemindersListViewModel by viewModel()
     private lateinit var binding: FragmentRemindersBinding
+
+    private val requestLocationPermissionLauncher: ActivityResultLauncher<String> =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
+            if (isGranted) {
+                _viewModel.setUserAvailableToSaveReminders()
+            } else {
+                setupSelectionObserver()
+            }
+        }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -45,9 +67,30 @@ class ReminderListFragment : BaseFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         binding.lifecycleOwner = this
+        enableMyLocation()
         setupRecyclerView()
         binding.addReminderFAB.setOnClickListener {
             navigateToAddReminder()
+        }
+
+        _viewModel.isAvailableToSaveAReminder.observe(viewLifecycleOwner) { isUserAvailableToSaveReminders ->
+            binding.addReminderFAB.isEnabled = isUserAvailableToSaveReminders
+        }
+    }
+
+    private fun setupSelectionObserver() {
+        _viewModel.currentLocationPermission.observe(viewLifecycleOwner) { currentPermission ->
+            when (currentPermission) {
+                CurrentLocationPermission.NOT_GRANTED -> {
+                    showPermissionDeniedMessage(getString(R.string.permission_denied_explanation))
+                }
+
+                CurrentLocationPermission.COARSE -> {
+                    showPermissionDeniedMessage(getString(R.string.precise_permission_denied_explanation))
+                }
+
+                else -> {}
+            }
         }
     }
 
@@ -89,5 +132,55 @@ class ReminderListFragment : BaseFragment() {
     private fun launchAuthenticationActivity() {
         val intent = Intent(requireContext(), AuthenticationActivity::class.java)
         startActivity(intent)
+    }
+
+    private fun isPermissionGranted(): Boolean {
+        return when (PackageManager.PERMISSION_GRANTED) {
+            ContextCompat.checkSelfPermission(
+                requireContext(),
+                Manifest.permission.ACCESS_FINE_LOCATION,
+            ),
+            -> {
+                _viewModel.setCurrentLocationPermission(CurrentLocationPermission.PRECISE)
+                true
+            }
+
+            ContextCompat.checkSelfPermission(
+                requireContext(),
+                Manifest.permission.ACCESS_COARSE_LOCATION,
+            ),
+            -> {
+                _viewModel.setCurrentLocationPermission(CurrentLocationPermission.COARSE)
+                false
+            }
+
+            else -> {
+                _viewModel.setCurrentLocationPermission(CurrentLocationPermission.NOT_GRANTED)
+                false
+            }
+        }
+    }
+
+    private fun enableMyLocation() {
+        if (isPermissionGranted()) {
+            _viewModel.setUserAvailableToSaveReminders()
+        } else {
+            requestLocationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+        }
+    }
+
+    private fun showPermissionDeniedMessage(message: String) {
+        val snackBar = Snackbar.make(
+            requireActivity().findViewById(android.R.id.content),
+            message,
+            Snackbar.LENGTH_INDEFINITE,
+        )
+        snackBar.setAction(getString(R.string.enable_location_button_text)) {
+            val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+            val uri = Uri.fromParts("package", requireContext().packageName, null)
+            intent.data = uri
+            startActivity(intent)
+        }
+        snackBar.show()
     }
 }

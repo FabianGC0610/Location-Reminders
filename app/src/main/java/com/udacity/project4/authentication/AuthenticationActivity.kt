@@ -98,7 +98,7 @@ class AuthenticationActivity : AppCompatActivity() {
                     if (!loginButtonNotClickYet) {
                         Snackbar.make(
                             findViewById(android.R.id.content),
-                            "You have not successfully completed the login process. Try again.",
+                            getString(R.string.login_unsuccessfully_message),
                             Snackbar.LENGTH_SHORT,
                         ).show()
                     }

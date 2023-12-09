@@ -1,6 +1,7 @@
 package com.udacity.project4.locationreminders.reminderslist
 
 import android.app.Application
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.udacity.project4.base.BaseViewModel
@@ -11,10 +12,24 @@ import kotlinx.coroutines.launch
 
 class RemindersListViewModel(
     app: Application,
-    private val dataSource: ReminderDataSource
+    private val dataSource: ReminderDataSource,
 ) : BaseViewModel(app) {
     // list that holds the reminder data to be displayed on the UI
     val remindersList = MutableLiveData<List<ReminderDataItem>>()
+
+    private val _currentLocationPermission = MutableLiveData<CurrentLocationPermission>()
+    val currentLocationPermission: LiveData<CurrentLocationPermission> get() = _currentLocationPermission
+
+    private val _isAvailableToSaveAReminder = MutableLiveData<Boolean>()
+    val isAvailableToSaveAReminder: LiveData<Boolean> get() = _isAvailableToSaveAReminder
+
+    fun setCurrentLocationPermission(permission: CurrentLocationPermission) {
+        _currentLocationPermission.value = permission
+    }
+
+    fun setUserAvailableToSaveReminders() {
+        _isAvailableToSaveAReminder.value = true
+    }
 
     /**
      * Get all the reminders from the DataSource and add them to the remindersList to be shown on the UI,
@@ -23,30 +38,32 @@ class RemindersListViewModel(
     fun loadReminders() {
         showLoading.value = true
         viewModelScope.launch {
-            //interacting with the dataSource has to be through a coroutine
+            // interacting with the dataSource has to be through a coroutine
             val result = dataSource.getReminders()
             showLoading.postValue(false)
             when (result) {
                 is Result.Success<*> -> {
                     val dataList = ArrayList<ReminderDataItem>()
-                    dataList.addAll((result.data as List<ReminderDTO>).map { reminder ->
-                        //map the reminder data from the DB to the be ready to be displayed on the UI
-                        ReminderDataItem(
-                            reminder.title,
-                            reminder.description,
-                            reminder.location,
-                            reminder.latitude,
-                            reminder.longitude,
-                            reminder.id
-                        )
-                    })
+                    dataList.addAll(
+                        (result.data as List<ReminderDTO>).map { reminder ->
+                            // map the reminder data from the DB to the be ready to be displayed on the UI
+                            ReminderDataItem(
+                                reminder.title,
+                                reminder.description,
+                                reminder.location,
+                                reminder.latitude,
+                                reminder.longitude,
+                                reminder.id,
+                            )
+                        },
+                    )
                     remindersList.value = dataList
                 }
                 is Result.Error ->
                     showSnackBar.value = result.message
             }
 
-            //check if no data has to be shown
+            // check if no data has to be shown
             invalidateShowNoData()
         }
     }
@@ -57,4 +74,8 @@ class RemindersListViewModel(
     private fun invalidateShowNoData() {
         showNoData.value = remindersList.value == null || remindersList.value!!.isEmpty()
     }
+}
+
+enum class CurrentLocationPermission {
+    PRECISE, COARSE, NOT_GRANTED
 }

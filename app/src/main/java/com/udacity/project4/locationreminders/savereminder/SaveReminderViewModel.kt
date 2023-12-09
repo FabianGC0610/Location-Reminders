@@ -1,6 +1,7 @@
 package com.udacity.project4.locationreminders.savereminder
 
 import android.app.Application
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.google.android.gms.maps.model.PointOfInterest
@@ -14,12 +15,18 @@ import kotlinx.coroutines.launch
 
 class SaveReminderViewModel(val app: Application, val dataSource: ReminderDataSource) :
     BaseViewModel(app) {
-    val reminderTitle = MutableLiveData<String>()
-    val reminderDescription = MutableLiveData<String>()
-    val reminderSelectedLocationStr = MutableLiveData<String>()
-    val selectedPOI = MutableLiveData<PointOfInterest>()
-    val latitude = MutableLiveData<Double>()
-    val longitude = MutableLiveData<Double>()
+    val reminderTitle = MutableLiveData<String?>()
+    val reminderDescription = MutableLiveData<String?>()
+    val reminderSelectedLocationStr = MutableLiveData<String?>()
+    val selectedPOI = MutableLiveData<PointOfInterest?>()
+    val latitude = MutableLiveData<Double?>()
+    val longitude = MutableLiveData<Double?>()
+
+    private val _confirmLocationEvent = MutableLiveData<Boolean>()
+    val confirmLocationEvent: LiveData<Boolean> get() = _confirmLocationEvent
+
+    private val _isAMarketSelected = MutableLiveData<Boolean>()
+    val isAMarketSelected: LiveData<Boolean> get() = _isAMarketSelected
 
     /**
      * Clear the live data objects to start fresh next time the view model gets called
@@ -31,6 +38,11 @@ class SaveReminderViewModel(val app: Application, val dataSource: ReminderDataSo
         selectedPOI.value = null
         latitude.value = null
         longitude.value = null
+    }
+
+    fun onClearLocationFragment() {
+        _confirmLocationEvent.value = false
+        _isAMarketSelected.value = false
     }
 
     /**
@@ -55,8 +67,8 @@ class SaveReminderViewModel(val app: Application, val dataSource: ReminderDataSo
                     reminderData.location,
                     reminderData.latitude,
                     reminderData.longitude,
-                    reminderData.id
-                )
+                    reminderData.id,
+                ),
             )
             showLoading.value = false
             showToast.value = app.getString(R.string.reminder_saved)
@@ -78,5 +90,17 @@ class SaveReminderViewModel(val app: Application, val dataSource: ReminderDataSo
             return false
         }
         return true
+    }
+
+    fun setMarketSelected() {
+        _isAMarketSelected.value = true
+    }
+
+    fun onConfirmLocation() {
+        _confirmLocationEvent.value = true
+    }
+
+    fun onConfirmLocationComplete() {
+        _confirmLocationEvent.value = false
     }
 }
