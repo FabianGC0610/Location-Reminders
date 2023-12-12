@@ -1,6 +1,5 @@
 package com.udacity.project4.locationreminders.savereminder
 
-import android.app.Application
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
@@ -8,13 +7,13 @@ import com.google.android.gms.maps.model.PointOfInterest
 import com.udacity.project4.R
 import com.udacity.project4.base.BaseViewModel
 import com.udacity.project4.base.NavigationCommand
-import com.udacity.project4.locationreminders.data.ReminderDataSource
 import com.udacity.project4.locationreminders.data.dto.ReminderDTO
+import com.udacity.project4.locationreminders.data.local.RemindersLocalRepository
 import com.udacity.project4.locationreminders.reminderslist.ReminderDataItem
 import kotlinx.coroutines.launch
 
-class SaveReminderViewModel(val app: Application, val dataSource: ReminderDataSource) :
-    BaseViewModel(app) {
+class SaveReminderViewModel(private val remindersRepository: RemindersLocalRepository) :
+    BaseViewModel() {
     val reminderTitle = MutableLiveData<String?>()
     val reminderDescription = MutableLiveData<String?>()
     val reminderSelectedLocationStr = MutableLiveData<String?>()
@@ -22,11 +21,22 @@ class SaveReminderViewModel(val app: Application, val dataSource: ReminderDataSo
     val latitude = MutableLiveData<Double?>()
     val longitude = MutableLiveData<Double?>()
 
+    val reminder = MutableLiveData<ReminderDataItem>()
+
     private val _confirmLocationEvent = MutableLiveData<Boolean>()
     val confirmLocationEvent: LiveData<Boolean> get() = _confirmLocationEvent
 
+    private val _saveReminderEvent = MutableLiveData<Boolean>()
+    val saveReminderEvent: LiveData<Boolean> get() = _saveReminderEvent
+
     private val _isAMarketSelected = MutableLiveData<Boolean>()
     val isAMarketSelected: LiveData<Boolean> get() = _isAMarketSelected
+
+    private val _canSaveGeofence = MutableLiveData<Boolean>()
+    val canSaveGeofence: LiveData<Boolean> get() = _canSaveGeofence
+
+    private val _isLocationPermissionGranted = MutableLiveData<Boolean>()
+    val isLocationPermissionGranted: LiveData<Boolean> get() = _isLocationPermissionGranted
 
     /**
      * Clear the live data objects to start fresh next time the view model gets called
@@ -50,6 +60,7 @@ class SaveReminderViewModel(val app: Application, val dataSource: ReminderDataSo
      */
     fun validateAndSaveReminder(reminderData: ReminderDataItem) {
         if (validateEnteredData(reminderData)) {
+            _canSaveGeofence.value = true
             saveReminder(reminderData)
         }
     }
@@ -60,7 +71,7 @@ class SaveReminderViewModel(val app: Application, val dataSource: ReminderDataSo
     private fun saveReminder(reminderData: ReminderDataItem) {
         showLoading.value = true
         viewModelScope.launch {
-            dataSource.saveReminder(
+            remindersRepository.saveReminder(
                 ReminderDTO(
                     reminderData.title,
                     reminderData.description,
@@ -71,7 +82,7 @@ class SaveReminderViewModel(val app: Application, val dataSource: ReminderDataSo
                 ),
             )
             showLoading.value = false
-            showToast.value = app.getString(R.string.reminder_saved)
+            showToast.value = "Reminder Saved !"
             navigationCommand.value = NavigationCommand.Back
         }
     }
@@ -92,8 +103,16 @@ class SaveReminderViewModel(val app: Application, val dataSource: ReminderDataSo
         return true
     }
 
+    fun setIsPermissionGrantedToSaveReminder() {
+        _isLocationPermissionGranted.value = true
+    }
+
     fun setMarketSelected() {
         _isAMarketSelected.value = true
+    }
+
+    fun onGeofenceSaved() {
+        _canSaveGeofence.value = false
     }
 
     fun onConfirmLocation() {
@@ -102,5 +121,13 @@ class SaveReminderViewModel(val app: Application, val dataSource: ReminderDataSo
 
     fun onConfirmLocationComplete() {
         _confirmLocationEvent.value = false
+    }
+
+    fun onSaveReminder() {
+        _saveReminderEvent.value = true
+    }
+
+    fun onSaveReminderCompleted() {
+        _saveReminderEvent.value = false
     }
 }

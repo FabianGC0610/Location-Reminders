@@ -12,13 +12,13 @@ import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
-import androidx.activity.addCallback
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.databinding.DataBindingUtil
 import com.firebase.ui.auth.AuthUI
 import com.google.android.material.snackbar.Snackbar
+import com.udacity.project4.BuildConfig
 import com.udacity.project4.R
 import com.udacity.project4.authentication.AuthenticationActivity
 import com.udacity.project4.base.BaseFragment
@@ -76,6 +76,10 @@ class ReminderListFragment : BaseFragment() {
         _viewModel.isAvailableToSaveAReminder.observe(viewLifecycleOwner) { isUserAvailableToSaveReminders ->
             binding.addReminderFAB.isEnabled = isUserAvailableToSaveReminders
         }
+
+        _viewModel.showLoading.observe(viewLifecycleOwner) { showLoading ->
+            binding.refreshLayout.isRefreshing = showLoading
+        }
     }
 
     private fun setupSelectionObserver() {
@@ -108,7 +112,11 @@ class ReminderListFragment : BaseFragment() {
     }
 
     private fun setupRecyclerView() {
-        val adapter = RemindersListAdapter {}
+        val adapter = RemindersListAdapter { reminder ->
+            _viewModel.navigationCommand.postValue(
+                NavigationCommand.To(ReminderListFragmentDirections.toSaveReminder()),
+            )
+        }
         // Setup the recycler view using the extension function
         binding.reminderssRecyclerView.setup(adapter)
     }
@@ -177,7 +185,7 @@ class ReminderListFragment : BaseFragment() {
         )
         snackBar.setAction(getString(R.string.enable_location_button_text)) {
             val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
-            val uri = Uri.fromParts("package", requireContext().packageName, null)
+            val uri = Uri.fromParts("package", BuildConfig.APPLICATION_ID, null)
             intent.data = uri
             startActivity(intent)
         }

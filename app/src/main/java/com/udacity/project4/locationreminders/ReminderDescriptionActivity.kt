@@ -2,6 +2,7 @@ package com.udacity.project4.locationreminders
 
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
@@ -31,6 +32,30 @@ class ReminderDescriptionActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         val layoutId = R.layout.activity_reminder_description
         binding = DataBindingUtil.setContentView(this, layoutId)
-        // TODO: Add the implementation of the reminder details
+        val reminderDataItem =
+            intent.getSerializableExtra(EXTRA_ReminderDataItem) as? ReminderDataItem
+        if (reminderDataItem != null) {
+            binding.reminderDataItem = reminderDataItem
+
+            binding.googleLink.setOnClickListener {
+                val latitude = String.format("%.4f", reminderDataItem.latitude)
+                val longitude = String.format("%.4f", reminderDataItem.longitude)
+                val locationName = reminderDataItem.location
+                val zoomLevel = 15
+                val location = "geo:$latitude,$longitude?z$zoomLevel&q=$latitude,$longitude($locationName)"
+
+                val mapIntent = Intent(Intent.ACTION_VIEW, Uri.parse(location))
+
+                if (mapIntent.resolveActivity(packageManager) != null) {
+                    startActivity(mapIntent)
+                } else {
+                    val webIntent = Intent(
+                        Intent.ACTION_VIEW,
+                        Uri.parse("https://www.google.com/maps?q=$latitude,$longitude"),
+                    )
+                    startActivity(webIntent)
+                }
+            }
+        }
     }
 }
