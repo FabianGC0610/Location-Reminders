@@ -98,3 +98,5 @@ _app/src/main/java/com/udacity/project4/locationreminders/data/local/RemindersLo
 `app/src/main/java/com/udacity/project4/locationreminders/reminderslist/RemindersListViewModel.kt,d/7/d7656f1bc2c98964a974a58a206d2a0bcf029b1e
 ~
 Napp/src/main/java/com/udacity/project4/locationreminders/data/local/LocalDB.kt,9/8/9813f319078af37021827cfce8b2dd5618029c31
+o
+?app/src/main/java/com/udacity/project4/utils/BindingAdapters.kt,e/2/e27ec0672434f5b12c750a67ad30a49653b3b5d0

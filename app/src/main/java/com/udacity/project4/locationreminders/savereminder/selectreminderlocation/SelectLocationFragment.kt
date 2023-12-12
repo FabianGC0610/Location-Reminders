@@ -80,8 +80,10 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         _viewModel.isAMarketSelected.observe(viewLifecycleOwner) { isAMarketSelected ->
             if (isAMarketSelected) {
                 binding.confirmLocationButton.visibility = View.VISIBLE
+                binding.locationTip.visibility = View.GONE
             } else {
                 binding.confirmLocationButton.visibility = View.GONE
+                binding.locationTip.visibility = View.VISIBLE
             }
         }
     }
@@ -141,7 +143,7 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         map.setOnMapClickListener { latLng ->
             val snippet = String.format(
                 Locale.getDefault(),
-                "Lat: %1$.5f, Long: %2$.5f",
+                getString(R.string.lat_long_snippet),
                 latLng.latitude,
                 latLng.longitude,
             )

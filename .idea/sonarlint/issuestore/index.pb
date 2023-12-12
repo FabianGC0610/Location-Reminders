@@ -98,3 +98,5 @@ Aapp/src/main/java/com/udacity/project4/utils/NotificationUtils.kt,5/c/5cf3c351
 _app/src/main/java/com/udacity/project4/locationreminders/data/local/RemindersLocalRepository.kt,0/6/0628f7b4044362b4d99a713a57435c46b6269a12
 ~
 Napp/src/main/java/com/udacity/project4/locationreminders/data/local/LocalDB.kt,9/8/9813f319078af37021827cfce8b2dd5618029c31
+o
+?app/src/main/java/com/udacity/project4/utils/BindingAdapters.kt,e/2/e27ec0672434f5b12c750a67ad30a49653b3b5d0
