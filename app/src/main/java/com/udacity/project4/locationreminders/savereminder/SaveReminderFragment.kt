@@ -260,11 +260,17 @@ class SaveReminderFragment : BaseFragment() {
             else -> REQUEST_FOREGROUND_ONLY_PERMISSIONS_REQUEST_CODE
         }
         Log.d(TAG, "Request foreground only location permission")
-        ActivityCompat.requestPermissions(
-            requireActivity(),
-            permissionsArray,
-            resultCode,
-        )
+        Snackbar.make(
+            requireActivity().findViewById(android.R.id.content),
+            R.string.location_required_error,
+            Snackbar.LENGTH_INDEFINITE,
+        ).setAction(android.R.string.ok) {
+            ActivityCompat.requestPermissions(
+                requireActivity(),
+                permissionsArray,
+                resultCode,
+            )
+        }.show()
     }
 
     @SuppressLint("MissingPermission")
