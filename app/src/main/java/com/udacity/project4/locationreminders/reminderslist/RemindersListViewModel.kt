@@ -2,7 +2,9 @@ package com.udacity.project4.locationreminders.reminderslist
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.map
 import androidx.lifecycle.viewModelScope
+import com.udacity.project4.FirebaseUserLiveData
 import com.udacity.project4.base.BaseViewModel
 import com.udacity.project4.locationreminders.data.dto.ReminderDTO
 import com.udacity.project4.locationreminders.data.dto.Result
@@ -27,6 +29,18 @@ class RemindersListViewModel(
 
     fun setUserAvailableToSaveReminders() {
         _isAvailableToSaveAReminder.value = true
+    }
+
+    enum class AuthenticationState {
+        AUTHENTICATED, UNAUTHENTICATED
+    }
+
+    val authenticationState = FirebaseUserLiveData().map { user ->
+        if (user != null) {
+            AuthenticationState.AUTHENTICATED
+        } else {
+            AuthenticationState.UNAUTHENTICATED
+        }
     }
 
     /**

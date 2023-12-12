@@ -42,7 +42,8 @@ class ReminderDescriptionActivity : AppCompatActivity() {
                 val longitude = String.format("%.4f", reminderDataItem.longitude)
                 val locationName = reminderDataItem.location
                 val zoomLevel = 15
-                val location = "geo:$latitude,$longitude?z$zoomLevel&q=$latitude,$longitude($locationName)"
+                val location =
+                    "geo:$latitude,$longitude?z$zoomLevel&q=$latitude,$longitude($locationName)"
 
                 val mapIntent = Intent(Intent.ACTION_VIEW, Uri.parse(location))
 

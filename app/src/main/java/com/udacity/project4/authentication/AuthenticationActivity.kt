@@ -121,8 +121,15 @@ class AuthenticationActivity : AppCompatActivity() {
         signInLauncher.launch(signInIntent)
     }
 
+    override fun onBackPressed() {
+        super.onBackPressed()
+        finishAffinity()
+    }
+
     private fun launchRemindersActivity() {
         val intent = Intent(this, RemindersActivity::class.java)
+        intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
         startActivity(intent)
+        finish()
     }
 }

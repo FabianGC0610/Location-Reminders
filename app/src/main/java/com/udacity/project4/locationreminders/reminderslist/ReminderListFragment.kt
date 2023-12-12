@@ -16,6 +16,7 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.databinding.DataBindingUtil
+import androidx.navigation.fragment.findNavController
 import com.firebase.ui.auth.AuthUI
 import com.google.android.material.snackbar.Snackbar
 import com.udacity.project4.BuildConfig
@@ -67,7 +68,6 @@ class ReminderListFragment : BaseFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         binding.lifecycleOwner = this
-        enableMyLocation()
         setupRecyclerView()
         binding.addReminderFAB.setOnClickListener {
             navigateToAddReminder()
@@ -80,6 +80,8 @@ class ReminderListFragment : BaseFragment() {
         _viewModel.showLoading.observe(viewLifecycleOwner) { showLoading ->
             binding.refreshLayout.isRefreshing = showLoading
         }
+
+        observeAuthenticationState()
     }
 
     private fun setupSelectionObserver() {
@@ -125,7 +127,7 @@ class ReminderListFragment : BaseFragment() {
         when (item.itemId) {
             R.id.logout -> {
                 AuthUI.getInstance().signOut(requireContext())
-                launchAuthenticationActivity()
+                findNavController().popBackStack()
             }
         }
         return super.onOptionsItemSelected(item)
@@ -190,5 +192,21 @@ class ReminderListFragment : BaseFragment() {
             startActivity(intent)
         }
         snackBar.show()
+    }
+
+    private fun observeAuthenticationState() {
+        _viewModel.authenticationState.observe(viewLifecycleOwner) { authenticationState ->
+            when (authenticationState) {
+                RemindersListViewModel.AuthenticationState.AUTHENTICATED -> {
+                    binding.addReminderFAB.isEnabled = true
+                    enableMyLocation()
+                }
+
+                else -> {
+                    binding.addReminderFAB.isEnabled = false
+                    launchAuthenticationActivity()
+                }
+            }
+        }
     }
 }
