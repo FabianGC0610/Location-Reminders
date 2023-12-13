@@ -7,7 +7,9 @@ import com.udacity.project4.locationreminders.data.ReminderDataSource
 import com.udacity.project4.locationreminders.data.local.RemindersDatabase
 import com.udacity.project4.locationreminders.data.local.RemindersLocalDataSource
 import com.udacity.project4.locationreminders.data.local.RemindersLocalRepository
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 
 object ServiceLocator {
     private val lock = Any()
@@ -47,11 +49,6 @@ object ServiceLocator {
 
     @VisibleForTesting
     fun resetRepository() {
-        synchronized(lock) {
-            runBlocking {
-                RemindersLocalDataSource(database?.reminderDao()!!).deleteAllReminders()
-            }
-        }
         // Clear all data to avoid test pollution.
         database?.apply {
             clearAllTables()
