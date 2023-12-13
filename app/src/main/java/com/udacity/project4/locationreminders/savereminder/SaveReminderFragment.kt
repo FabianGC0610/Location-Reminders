@@ -218,9 +218,7 @@ class SaveReminderFragment : BaseFragment() {
             }
         }
         locationSettingsResponseTask.addOnCompleteListener {
-            if (it.isSuccessful) {
-                _viewModel.setIsPermissionGrantedToSaveReminder()
-            }
+            if (it.isSuccessful) {}
         }
     }
 

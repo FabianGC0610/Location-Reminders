@@ -20,6 +20,7 @@ import androidx.navigation.fragment.findNavController
 import com.firebase.ui.auth.AuthUI
 import com.google.android.material.snackbar.Snackbar
 import com.udacity.project4.BuildConfig
+import com.udacity.project4.FirebaseUserLiveData
 import com.udacity.project4.R
 import com.udacity.project4.authentication.AuthenticationActivity
 import com.udacity.project4.base.BaseFragment
@@ -35,6 +36,8 @@ class ReminderListFragment : BaseFragment() {
     // Use Koin to retrieve the ViewModel instance
     override val _viewModel: RemindersListViewModel by viewModel()
     private lateinit var binding: FragmentRemindersBinding
+
+    private var firebaseUserLiveData: FirebaseUserLiveData = FirebaseUserLiveData()
 
     private val requestLocationPermissionLauncher: ActivityResultLauncher<String> =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
@@ -68,6 +71,7 @@ class ReminderListFragment : BaseFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         binding.lifecycleOwner = this
+        setupFirebaseUserObserver()
         setupRecyclerView()
         binding.addReminderFAB.setOnClickListener {
             navigateToAddReminder()
@@ -207,6 +211,18 @@ class ReminderListFragment : BaseFragment() {
                     launchAuthenticationActivity()
                 }
             }
+        }
+    }
+
+    private fun setupFirebaseUserObserver() {
+        firebaseUserLiveData.observeForever { user ->
+            _viewModel.setAuthenticationState(
+                if (user != null) {
+                    RemindersListViewModel.AuthenticationState.AUTHENTICATED
+                } else {
+                    RemindersListViewModel.AuthenticationState.UNAUTHENTICATED
+                },
+            )
         }
     }
 }

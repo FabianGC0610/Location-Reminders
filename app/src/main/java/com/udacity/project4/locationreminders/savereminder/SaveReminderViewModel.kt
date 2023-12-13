@@ -7,12 +7,12 @@ import com.google.android.gms.maps.model.PointOfInterest
 import com.udacity.project4.R
 import com.udacity.project4.base.BaseViewModel
 import com.udacity.project4.base.NavigationCommand
+import com.udacity.project4.locationreminders.data.ReminderDataSource
 import com.udacity.project4.locationreminders.data.dto.ReminderDTO
-import com.udacity.project4.locationreminders.data.local.RemindersLocalRepository
 import com.udacity.project4.locationreminders.reminderslist.ReminderDataItem
 import kotlinx.coroutines.launch
 
-class SaveReminderViewModel(private val remindersRepository: RemindersLocalRepository) :
+class SaveReminderViewModel(private val remindersRepository: ReminderDataSource) :
     BaseViewModel() {
     val reminderTitle = MutableLiveData<String?>()
     val reminderDescription = MutableLiveData<String?>()
@@ -34,9 +34,6 @@ class SaveReminderViewModel(private val remindersRepository: RemindersLocalRepos
 
     private val _canSaveGeofence = MutableLiveData<Boolean>()
     val canSaveGeofence: LiveData<Boolean> get() = _canSaveGeofence
-
-    private val _isLocationPermissionGranted = MutableLiveData<Boolean>()
-    val isLocationPermissionGranted: LiveData<Boolean> get() = _isLocationPermissionGranted
 
     /**
      * Clear the live data objects to start fresh next time the view model gets called
@@ -101,10 +98,6 @@ class SaveReminderViewModel(private val remindersRepository: RemindersLocalRepos
             return false
         }
         return true
-    }
-
-    fun setIsPermissionGrantedToSaveReminder() {
-        _isLocationPermissionGranted.value = true
     }
 
     fun setMarketSelected() {

@@ -2,17 +2,15 @@ package com.udacity.project4.locationreminders.reminderslist
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.map
 import androidx.lifecycle.viewModelScope
-import com.udacity.project4.FirebaseUserLiveData
 import com.udacity.project4.base.BaseViewModel
+import com.udacity.project4.locationreminders.data.ReminderDataSource
 import com.udacity.project4.locationreminders.data.dto.ReminderDTO
 import com.udacity.project4.locationreminders.data.dto.Result
-import com.udacity.project4.locationreminders.data.local.RemindersLocalRepository
 import kotlinx.coroutines.launch
 
 class RemindersListViewModel(
-    private val remindersRepository: RemindersLocalRepository,
+    private val remindersRepository: ReminderDataSource,
 ) : BaseViewModel() {
     // list that holds the reminder data to be displayed on the UI
     val remindersList = MutableLiveData<List<ReminderDataItem>>()
@@ -22,6 +20,13 @@ class RemindersListViewModel(
 
     private val _isAvailableToSaveAReminder = MutableLiveData<Boolean>()
     val isAvailableToSaveAReminder: LiveData<Boolean> get() = _isAvailableToSaveAReminder
+
+    private val _authenticationState = MutableLiveData<AuthenticationState>()
+    val authenticationState: LiveData<AuthenticationState> = _authenticationState
+
+    fun setAuthenticationState(state: AuthenticationState) {
+        _authenticationState.value = state
+    }
 
     fun setCurrentLocationPermission(permission: CurrentLocationPermission) {
         _currentLocationPermission.value = permission
@@ -33,14 +38,6 @@ class RemindersListViewModel(
 
     enum class AuthenticationState {
         AUTHENTICATED, UNAUTHENTICATED
-    }
-
-    val authenticationState = FirebaseUserLiveData().map { user ->
-        if (user != null) {
-            AuthenticationState.AUTHENTICATED
-        } else {
-            AuthenticationState.UNAUTHENTICATED
-        }
     }
 
     /**

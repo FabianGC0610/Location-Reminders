@@ -13,6 +13,7 @@ import com.firebase.ui.auth.AuthUI
 import com.firebase.ui.auth.IdpResponse
 import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.FirebaseAuth
+import com.udacity.project4.FirebaseUserLiveData
 import com.udacity.project4.R
 import com.udacity.project4.databinding.ActivityAuthenticationBinding
 import com.udacity.project4.locationreminders.RemindersActivity
@@ -31,6 +32,8 @@ class AuthenticationActivity : AppCompatActivity() {
 
     private val viewModel by viewModels<AuthenticationActivityViewModel>()
 
+    private var firebaseUserLiveData: FirebaseUserLiveData = FirebaseUserLiveData()
+
     private val signInLauncher: ActivityResultLauncher<Intent> =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             onActivityResult(SIGN_IN_RESULT_CODE, result.resultCode, result.data)
@@ -43,6 +46,8 @@ class AuthenticationActivity : AppCompatActivity() {
 
         binding.viewModel = viewModel
         binding.lifecycleOwner = this
+
+        setupFirebaseUserObserver()
 
         viewModel.loginEvent.observe(this) { loginEvent ->
             if (loginEvent) {
@@ -104,6 +109,18 @@ class AuthenticationActivity : AppCompatActivity() {
                     }
                 }
             }
+        }
+    }
+
+    private fun setupFirebaseUserObserver() {
+        firebaseUserLiveData.observeForever { user ->
+            viewModel.setAuthenticationState(
+                if (user != null) {
+                    AuthenticationActivityViewModel.AuthenticationState.AUTHENTICATED
+                } else {
+                    AuthenticationActivityViewModel.AuthenticationState.UNAUTHENTICATED
+                },
+            )
         }
     }
 

@@ -19,11 +19,11 @@ import org.koin.dsl.module
 import org.koin.test.KoinTest
 import org.koin.test.get
 
+// END TO END test to black box test the app
 @RunWith(AndroidJUnit4::class)
 @LargeTest
-//END TO END test to black box test the app
 class RemindersActivityTest :
-    KoinTest {// Extended Koin Test - embed autoclose @after method to close Koin after every test
+    KoinTest { // Extended Koin Test - embed autoclose @after method to close Koin after every test
 
     private lateinit var repository: ReminderDataSource
     private lateinit var appContext: Application
@@ -34,38 +34,36 @@ class RemindersActivityTest :
      */
     @Before
     fun init() {
-        stopKoin()//stop the original app koin
+        stopKoin() // stop the original app koin
         appContext = getApplicationContext()
         val myModule = module {
             viewModel {
                 RemindersListViewModel(
-                    appContext,
-                    get() as ReminderDataSource
+                    get(),
                 )
             }
             single {
                 SaveReminderViewModel(
-                    appContext,
-                    get() as ReminderDataSource
+                    get(),
                 )
             }
-            single { RemindersLocalRepository(get()) as ReminderDataSource }
+            single { repository }
+            single { RemindersLocalRepository(repository) }
             single { LocalDB.createRemindersDao(appContext) }
+            single { appContext }
         }
-        //declare a new koin module
+        // declare a new koin module
         startKoin {
             modules(listOf(myModule))
         }
-        //Get our real repository
+        // Get our real repository
         repository = get()
 
-        //clear the data to start fresh
+        // clear the data to start fresh
         runBlocking {
             repository.deleteAllReminders()
         }
     }
 
-
 //    TODO: add End to End testing to the app
-
 }
