@@ -137,8 +137,8 @@ class SaveReminderViewModelTest {
         // WHEN the system now can save the Geofence
         saveReminderViewModel.onGeofenceSaved()
 
-        // THEN the system set canSaveGeofence as true to continue with the saving
-        assertThat(saveReminderViewModel.canSaveGeofence.getOrAwaitValue(), `is`(true))
+        // THEN the system set canSaveGeofence as false to pass to the Reminder List an reset the property
+        assertThat(saveReminderViewModel.canSaveGeofence.getOrAwaitValue(), `is`(false))
     }
 
     @Test
