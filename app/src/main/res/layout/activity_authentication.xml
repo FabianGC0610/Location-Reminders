@@ -11,11 +11,13 @@
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/authentication_container"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         tools:context=".authentication.AuthenticationActivity">
 
         <TextView
+            android:id="@+id/login_text"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/welcome_to_the_location_reminder_app"

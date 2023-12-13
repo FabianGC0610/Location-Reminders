@@ -34,7 +34,7 @@ class FakeRemindersLocalRepository : ReminderDataSource {
     }
 
     override suspend fun deleteAllReminders() {
-        TODO("Not yet implemented")
+        remindersServiceData.clear()
     }
 
     fun addReminders(vararg reminders: ReminderDTO) {
