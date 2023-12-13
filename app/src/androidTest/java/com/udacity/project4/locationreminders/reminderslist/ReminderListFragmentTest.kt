@@ -1,7 +1,6 @@
 package com.udacity.project4.locationreminders.reminderslist
 
 import android.os.Bundle
-import android.view.View
 import androidx.fragment.app.testing.launchFragmentInContainer
 import androidx.navigation.NavController
 import androidx.navigation.Navigation
@@ -20,14 +19,12 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import com.udacity.project4.R
 import com.udacity.project4.ServiceLocator
+import com.udacity.project4.locationreminders.CheckRecyclerViewUtils.atPosition
 import com.udacity.project4.locationreminders.RemindersActivity
 import com.udacity.project4.locationreminders.data.FakeAndroidTestRepository
 import com.udacity.project4.locationreminders.data.dto.ReminderDTO
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runBlockingTest
-import org.hamcrest.Description
-import org.hamcrest.Matcher
-import org.hamcrest.TypeSafeMatcher
 import org.junit.After
 import org.junit.Assert.*
 import org.junit.Before
@@ -40,10 +37,6 @@ import org.mockito.Mockito.verify
 @ExperimentalCoroutinesApi
 @MediumTest
 class ReminderListFragmentTest {
-
-//    TODO: test the navigation of the fragments.
-//    TODO: test the displayed data on the UI.
-//    TODO: add testing for the error messages.
 
     private lateinit var repository: FakeAndroidTestRepository
 
@@ -74,6 +67,7 @@ class ReminderListFragmentTest {
         ServiceLocator.resetRepository()
     }
 
+    /** Remember to be authenticated before running the test */
     @Test
     fun clickReminder_navigateToSaveReminderFragment() = runBlockingTest {
         // GIVEN - On the reminders list screen with two reminders
@@ -102,6 +96,7 @@ class ReminderListFragmentTest {
         )
     }
 
+    /** Remember to be authenticated before running the test */
     @Test
     fun clickAddReminder_navigateToSaveReminderFragment() = runBlockingTest {
         // GIVEN - On the reminders list screen with two reminders
@@ -127,6 +122,7 @@ class ReminderListFragmentTest {
         )
     }
 
+    /** Remember to be authenticated before running the test */
     @Test
     fun retrieveAEmptyList_stayInTheRemindersListFragment() = runBlockingTest {
         // GIVEN - An empty list of reminder in the Reminders List Fragment
@@ -146,6 +142,7 @@ class ReminderListFragmentTest {
             .check(matches(isDisplayed()))
     }
 
+    /** Remember to be authenticated before running the test */
     @Test
     fun retrieveAListOfReminders_stayInTheRemindersListFragment() = runBlockingTest {
         // GIVEN - // GIVEN - On the reminders list screen with two reminders
@@ -171,6 +168,7 @@ class ReminderListFragmentTest {
             .check(matches(atPosition(1, isDisplayed())))
     }
 
+    /** Remember to be authenticated before running the test */
     @Test
     fun retrieveAReminderList_callAnErrorInTheRemindersListFragment() = runBlockingTest {
         // GIVEN - An error retrieving the reminders list
@@ -193,6 +191,7 @@ class ReminderListFragmentTest {
             .check(matches(withText("Test exception")))
     }
 
+    /** Remember to be authenticated before running the test */
     @Test
     fun clickLogout_navigateToTheAuthenticationActivity() {
         // GIVEN - start up Reminders List screen (is the fist screen contained inside of RemindersActivity)
@@ -207,24 +206,5 @@ class ReminderListFragmentTest {
         onView(withId(R.id.login_button)).check(matches(isDisplayed()))
 
         activityScenario.close()
-    }
-}
-
-// Check at a specific position of the RecyclerView
-fun atPosition(position: Int, itemMatcher: Matcher<View>): Matcher<View> {
-    return object : TypeSafeMatcher<View>() {
-        override fun describeTo(description: Description) {
-            description.appendText("at position $position: ")
-            itemMatcher.describeTo(description)
-        }
-
-        override fun matchesSafely(view: View): Boolean {
-            if (view !is RecyclerView) {
-                return false
-            }
-
-            val viewHolder = view.findViewHolderForAdapterPosition(position)
-            return viewHolder != null && itemMatcher.matches(viewHolder.itemView)
-        }
     }
 }

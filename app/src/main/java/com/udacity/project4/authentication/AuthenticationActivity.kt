@@ -131,9 +131,13 @@ class AuthenticationActivity : AppCompatActivity() {
         )
 
         val signInIntent =
-            AuthUI.getInstance().createSignInIntentBuilder().setAvailableProviders(
-                providers,
-            ).build()
+            AuthUI.getInstance()
+                .createSignInIntentBuilder()
+                .setLogo(R.drawable.map)
+                .setTheme(R.style.AppTheme)
+                .setAvailableProviders(
+                    providers,
+                ).build()
 
         signInLauncher.launch(signInIntent)
     }
