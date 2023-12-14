@@ -15,25 +15,11 @@ class RemindersListViewModel(
     // list that holds the reminder data to be displayed on the UI
     val remindersList = MutableLiveData<List<ReminderDataItem>>()
 
-    private val _currentLocationPermission = MutableLiveData<CurrentLocationPermission>()
-    val currentLocationPermission: LiveData<CurrentLocationPermission> get() = _currentLocationPermission
-
-    private val _isAvailableToSaveAReminder = MutableLiveData<Boolean>()
-    val isAvailableToSaveAReminder: LiveData<Boolean> get() = _isAvailableToSaveAReminder
-
     private val _authenticationState = MutableLiveData<AuthenticationState>()
     val authenticationState: LiveData<AuthenticationState> = _authenticationState
 
     fun setAuthenticationState(state: AuthenticationState) {
         _authenticationState.value = state
-    }
-
-    fun setCurrentLocationPermission(permission: CurrentLocationPermission) {
-        _currentLocationPermission.value = permission
-    }
-
-    fun setUserAvailableToSaveReminders() {
-        _isAvailableToSaveAReminder.value = true
     }
 
     enum class AuthenticationState {

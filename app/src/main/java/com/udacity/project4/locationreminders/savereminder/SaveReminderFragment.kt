@@ -105,6 +105,20 @@ class SaveReminderFragment : BaseFragment() {
 
         _viewModel.saveReminderEvent.observe(viewLifecycleOwner) { saveReminder ->
             if (saveReminder) {
+                checkPermissionsAndStartGeofencing()
+            }
+        }
+
+        _viewModel.canSaveGeofence.observe(viewLifecycleOwner) { canSaveGeofence ->
+            if (canSaveGeofence) {
+                addGeofenceForReminder(_viewModel.reminder.value!!)
+
+                _viewModel.onGeofenceSaved()
+            }
+        }
+
+        _viewModel.locationPermissionGranted.observe(viewLifecycleOwner) { permissionGranted ->
+            if (permissionGranted) {
                 val title = _viewModel.reminderTitle.value
                 val description = _viewModel.reminderDescription.value
                 val location = _viewModel.reminderSelectedLocationStr.value
@@ -124,19 +138,6 @@ class SaveReminderFragment : BaseFragment() {
                 _viewModel.onSaveReminderCompleted()
             }
         }
-
-        _viewModel.canSaveGeofence.observe(viewLifecycleOwner) { canSaveGeofence ->
-            if (canSaveGeofence) {
-                addGeofenceForReminder(_viewModel.reminder.value!!)
-
-                _viewModel.onGeofenceSaved()
-            }
-        }
-    }
-
-    override fun onStart() {
-        super.onStart()
-        checkPermissionsAndStartGeofencing()
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -159,33 +160,33 @@ class SaveReminderFragment : BaseFragment() {
             } else {
                 showToast(getString(R.string.notification_permission_not_granted), requireContext())
             }
-        }
-
-        if (
-            grantResults.isEmpty() ||
-            grantResults[LOCATION_PERMISSION_INDEX] == PackageManager.PERMISSION_DENIED ||
-            (
-                requestCode == REQUEST_FOREGROUND_AND_BACKGROUND_PERMISSION_RESULT_CODE &&
-                    grantResults[BACKGROUND_LOCATION_PERMISSION_INDEX] ==
-                    PackageManager.PERMISSION_DENIED
-                )
-        ) {
-            Snackbar.make(
-                requireActivity().findViewById(android.R.id.content),
-                R.string.permission_denied_explanation,
-                Snackbar.LENGTH_INDEFINITE,
-            )
-                .setAction(R.string.settings) {
-                    startActivity(
-                        Intent().apply {
-                            action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
-                            data = Uri.fromParts("package", BuildConfig.APPLICATION_ID, null)
-                            flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                        },
-                    )
-                }.show()
         } else {
-            checkDeviceLocationSettingsAndStartGeofence()
+            if (
+                grantResults.isEmpty() ||
+                grantResults[LOCATION_PERMISSION_INDEX] == PackageManager.PERMISSION_DENIED ||
+                (
+                    requestCode == REQUEST_FOREGROUND_AND_BACKGROUND_PERMISSION_RESULT_CODE &&
+                        grantResults[BACKGROUND_LOCATION_PERMISSION_INDEX] ==
+                        PackageManager.PERMISSION_DENIED
+                    )
+            ) {
+                Snackbar.make(
+                    requireActivity().findViewById(android.R.id.content),
+                    R.string.permission_denied_explanation,
+                    Snackbar.LENGTH_INDEFINITE,
+                )
+                    .setAction(R.string.settings) {
+                        startActivity(
+                            Intent().apply {
+                                action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
+                                data = Uri.fromParts("package", BuildConfig.APPLICATION_ID, null)
+                                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                            },
+                        )
+                    }.show()
+            } else {
+                checkDeviceLocationSettingsAndStartGeofence()
+            }
         }
     }
 
@@ -232,7 +233,9 @@ class SaveReminderFragment : BaseFragment() {
             }
         }
         locationSettingsResponseTask.addOnCompleteListener {
-            if (it.isSuccessful) {}
+            if (it.isSuccessful) {
+                _viewModel.setLocationPermissionGranted()
+            }
         }
     }
 
@@ -263,26 +266,32 @@ class SaveReminderFragment : BaseFragment() {
         if (foregroundAndBackgroundLocationPermissionApproved()) {
             return
         }
-        var permissionsArray = arrayOf(Manifest.permission.ACCESS_FINE_LOCATION)
-        val resultCode = when {
-            runningQOrLater -> {
-                permissionsArray += Manifest.permission.ACCESS_BACKGROUND_LOCATION
-                REQUEST_FOREGROUND_AND_BACKGROUND_PERMISSION_RESULT_CODE
-            }
-            else -> REQUEST_FOREGROUND_ONLY_PERMISSIONS_REQUEST_CODE
-        }
-        Log.d(TAG, "Request foreground only location permission")
-        Snackbar.make(
-            requireActivity().findViewById(android.R.id.content),
-            R.string.location_required_error,
-            Snackbar.LENGTH_INDEFINITE,
-        ).setAction(android.R.string.ok) {
-            ActivityCompat.requestPermissions(
-                requireActivity(),
-                permissionsArray,
-                resultCode,
+        val permissionsArray = arrayOf(Manifest.permission.ACCESS_FINE_LOCATION)
+        val resultCode = REQUEST_FOREGROUND_ONLY_PERMISSIONS_REQUEST_CODE
+        /** By my side I could not be able to show the native pop up to request the background location
+         * (I tried with my physical device and other emulators and that specific option does not appear :( )
+         * , instead of that as a solution I show a snackBar to request the user turn on the background location manually */
+        if (runningQOrLater) {
+            Snackbar.make(
+                requireActivity().findViewById(android.R.id.content),
+                getString(R.string.general_location_required),
+                Snackbar.LENGTH_SHORT,
             )
-        }.show()
+                .setAction(R.string.settings) {
+                    startActivity(
+                        Intent().apply {
+                            action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
+                            data = Uri.fromParts("package", BuildConfig.APPLICATION_ID, null)
+                            flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                        },
+                    )
+                }.show()
+        }
+        ActivityCompat.requestPermissions(
+            requireActivity(),
+            permissionsArray,
+            resultCode,
+        )
     }
 
     @SuppressLint("MissingPermission")

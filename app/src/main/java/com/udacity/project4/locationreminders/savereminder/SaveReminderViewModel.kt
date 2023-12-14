@@ -26,6 +26,12 @@ class SaveReminderViewModel(private val remindersRepository: ReminderDataSource)
     private val _confirmLocationEvent = MutableLiveData<Boolean>()
     val confirmLocationEvent: LiveData<Boolean> get() = _confirmLocationEvent
 
+    private val _locationPermissionGranted = MutableLiveData<Boolean>()
+    val locationPermissionGranted: LiveData<Boolean> get() = _locationPermissionGranted
+
+    private val _locationPermissionActivated= MutableLiveData<Boolean>()
+    val locationPermissionActivated: LiveData<Boolean> get() = _locationPermissionActivated
+
     private val _saveReminderEvent = MutableLiveData<Boolean>()
     val saveReminderEvent: LiveData<Boolean> get() = _saveReminderEvent
 
@@ -45,6 +51,7 @@ class SaveReminderViewModel(private val remindersRepository: ReminderDataSource)
         selectedPOI.value = null
         latitude.value = null
         longitude.value = null
+        _locationPermissionGranted.value = false
     }
 
     fun onClearLocationFragment() {
@@ -98,6 +105,18 @@ class SaveReminderViewModel(private val remindersRepository: ReminderDataSource)
             return false
         }
         return true
+    }
+
+    fun setLocationPermissionGranted() {
+        _locationPermissionGranted.value = true
+    }
+
+    fun setLocationPermissionIsNotGranted() {
+        _locationPermissionGranted.value = false
+    }
+
+    fun setLocationPermissionActivated() {
+        _locationPermissionActivated.value = true
     }
 
     fun setMarketSelected() {
