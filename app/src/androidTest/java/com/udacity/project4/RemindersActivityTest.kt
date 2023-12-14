@@ -10,11 +10,14 @@ import androidx.test.espresso.action.ViewActions
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.contrib.RecyclerViewActions
+import androidx.test.espresso.matcher.RootMatchers.withDecorView
 import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
+import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.LargeTest
+import com.google.android.material.internal.ContextUtils.getActivity
 import com.udacity.project4.locationreminders.CheckRecyclerViewUtils
 import com.udacity.project4.locationreminders.RemindersActivity
 import com.udacity.project4.locationreminders.data.ReminderDataSource
@@ -26,6 +29,8 @@ import com.udacity.project4.util.DataBindingIdlingResource
 import com.udacity.project4.util.monitorActivity
 import com.udacity.project4.utils.EspressoIdlingResource
 import kotlinx.coroutines.runBlocking
+import org.hamcrest.Matchers.`is`
+import org.hamcrest.Matchers.not
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
@@ -142,6 +147,22 @@ class RemindersActivityTest :
         Thread.sleep(500)
         onView(withId(R.id.saveReminder))
             .perform(click())
+
+        Thread.sleep(500)
+        // Confirm that the save reminder successfully toast alert is shown
+        onView(withText(R.string.reminder_saved)).inRoot(
+            withDecorView(
+                not(
+                    `is`(
+                        getActivity(appContext)?.window?.decorView,
+                    ),
+                ),
+            ),
+        ).check(
+            matches(
+                isDisplayed(),
+            ),
+        )
 
         // Confirm that we are in the reminders list screen
         Thread.sleep(500)

@@ -100,3 +100,15 @@ _app/src/main/java/com/udacity/project4/locationreminders/data/local/RemindersLo
 Napp/src/main/java/com/udacity/project4/locationreminders/data/local/LocalDB.kt,9/8/9813f319078af37021827cfce8b2dd5618029c31
 o
 ?app/src/main/java/com/udacity/project4/utils/BindingAdapters.kt,e/2/e27ec0672434f5b12c750a67ad30a49653b3b5d0
+â
+Yapp/src/androidTest/java/com/udacity/project4/locationreminders/CheckRecyclerViewUtils.kt,3/8/38f8361e9288e043b7a8c4e87f20b50a43f62a53
+ì
+capp/src/test/java/com/udacity/project4/locationreminders/data/local/RemindersLocalRepositoryTest.kt,f/f/ff729320c1ccb81f590e76c737551c5045e53e7a
+ç
+]app/src/test/java/com/udacity/project4/locationreminders/data/FakeRemindersLocalRepository.kt,1/8/180e5066a0de0a275e658cb6aaa611323cdf5a03
+}
+Mapp/src/test/java/com/udacity/project4/locationreminders/MainCoroutineRule.kt,b/9/b9553d5a5b4b8fac8d077669738045b4ef2fa3da
+|
+Lapp/src/test/java/com/udacity/project4/locationreminders/LiveDataTestUtil.kt,9/c/9cb5703c388ceb48706b81be5e84e023521af8d5
+ë
+aapp/src/androidTest/java/com/udacity/project4/locationreminders/data/FakeAndroidTestRepository.kt,3/8/3859f2aae092fe4bba8dc2cf4ef145c9dad2036e
