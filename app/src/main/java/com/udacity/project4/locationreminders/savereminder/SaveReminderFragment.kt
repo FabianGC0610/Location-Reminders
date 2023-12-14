@@ -8,6 +8,7 @@ import android.content.Intent
 import android.content.IntentSender
 import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import android.util.Log
@@ -15,7 +16,9 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.annotation.RequiresApi
 import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.databinding.DataBindingUtil
 import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.location.Geofence
@@ -36,6 +39,7 @@ import com.udacity.project4.locationreminders.reminderslist.ReminderDataItem
 import com.udacity.project4.utils.GeofencingConstants
 import com.udacity.project4.utils.LandmarkDataObject
 import com.udacity.project4.utils.setDisplayHomeAsUpEnabled
+import com.udacity.project4.utils.showToast
 import org.koin.android.ext.android.inject
 
 class SaveReminderFragment : BaseFragment() {
@@ -82,10 +86,12 @@ class SaveReminderFragment : BaseFragment() {
         return binding.root
     }
 
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         binding.lifecycleOwner = this
         geofencingClient = LocationServices.getGeofencingClient(requireActivity())
+        requestNotificationPermission()
         binding.selectLocation.setOnClickListener {
             // Navigate to another fragment to get the user location
             val directions = SaveReminderFragmentDirections
@@ -145,7 +151,15 @@ class SaveReminderFragment : BaseFragment() {
         permissions: Array<String>,
         grantResults: IntArray,
     ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         Log.d(TAG, "onRequestPermissionResult")
+        if (requestCode == REQUEST_CODE_PERMISSION_NOTIFICATION) {
+            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                showToast(getString(R.string.notification_permission_granted), requireContext())
+            } else {
+                showToast(getString(R.string.notification_permission_not_granted), requireContext())
+            }
+        }
 
         if (
             grantResults.isEmpty() ||
@@ -312,7 +326,16 @@ class SaveReminderFragment : BaseFragment() {
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
+    private fun requestNotificationPermission() {
+        val permission = Manifest.permission.POST_NOTIFICATIONS
+        if (ContextCompat.checkSelfPermission(requireContext(), permission) != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(arrayOf(permission), REQUEST_CODE_PERMISSION_NOTIFICATION)
+        }
+    }
+
     companion object {
+        private const val REQUEST_CODE_PERMISSION_NOTIFICATION = 123
         internal const val ACTION_GEOFENCE_EVENT =
             "ReminderListFragment.reminders.action.ACTION_GEOFENCE_EVENT"
     }
