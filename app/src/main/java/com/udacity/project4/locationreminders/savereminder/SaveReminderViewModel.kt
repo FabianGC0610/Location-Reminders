@@ -29,7 +29,7 @@ class SaveReminderViewModel(private val remindersRepository: ReminderDataSource)
     private val _locationPermissionGranted = MutableLiveData<Boolean>()
     val locationPermissionGranted: LiveData<Boolean> get() = _locationPermissionGranted
 
-    private val _locationPermissionActivated= MutableLiveData<Boolean>()
+    private val _locationPermissionActivated = MutableLiveData<Boolean>()
     val locationPermissionActivated: LiveData<Boolean> get() = _locationPermissionActivated
 
     private val _saveReminderEvent = MutableLiveData<Boolean>()

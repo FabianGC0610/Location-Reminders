@@ -147,6 +147,7 @@ class SaveReminderFragment : BaseFragment() {
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.Q)
     override fun onRequestPermissionsResult(
         requestCode: Int,
         permissions: Array<String>,
@@ -154,38 +155,38 @@ class SaveReminderFragment : BaseFragment() {
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         Log.d(TAG, "onRequestPermissionResult")
-        if (requestCode == REQUEST_CODE_PERMISSION_NOTIFICATION) {
-            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                showToast(getString(R.string.notification_permission_granted), requireContext())
-            } else {
-                showToast(getString(R.string.notification_permission_not_granted), requireContext())
+        when (requestCode) {
+            REQUEST_CODE_PERMISSION_NOTIFICATION -> {
+                if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    showToast(getString(R.string.notification_permission_granted), requireContext())
+                } else {
+                    showToast(getString(R.string.notification_permission_not_granted), requireContext())
+                }
             }
-        } else {
-            if (
-                grantResults.isEmpty() ||
-                grantResults[LOCATION_PERMISSION_INDEX] == PackageManager.PERMISSION_DENIED ||
-                (
-                    requestCode == REQUEST_FOREGROUND_AND_BACKGROUND_PERMISSION_RESULT_CODE &&
-                        grantResults[BACKGROUND_LOCATION_PERMISSION_INDEX] ==
-                        PackageManager.PERMISSION_DENIED
+            REQUEST_BACKGROUND_PERMISSION_RESULT_CODE -> {
+                if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    checkDeviceLocationSettingsAndStartGeofence()
+                }
+            }
+            REQUEST_FOREGROUND_ONLY_PERMISSIONS_REQUEST_CODE -> {
+                if (grantResults.isEmpty() && grantResults[0] == PackageManager.PERMISSION_DENIED) {
+                    Snackbar.make(
+                        requireActivity().findViewById(android.R.id.content),
+                        R.string.permission_denied_explanation,
+                        Snackbar.LENGTH_INDEFINITE,
                     )
-            ) {
-                Snackbar.make(
-                    requireActivity().findViewById(android.R.id.content),
-                    R.string.permission_denied_explanation,
-                    Snackbar.LENGTH_INDEFINITE,
-                )
-                    .setAction(R.string.settings) {
-                        startActivity(
-                            Intent().apply {
-                                action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
-                                data = Uri.fromParts("package", BuildConfig.APPLICATION_ID, null)
-                                flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                            },
-                        )
-                    }.show()
-            } else {
-                checkDeviceLocationSettingsAndStartGeofence()
+                        .setAction(R.string.settings) {
+                            startActivity(
+                                Intent().apply {
+                                    action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
+                                    data = Uri.fromParts("package", BuildConfig.APPLICATION_ID, null)
+                                    flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                                },
+                            )
+                        }.show()
+                } else {
+                    requestBackgroundLocationPermission()
+                }
             }
         }
     }
@@ -196,11 +197,12 @@ class SaveReminderFragment : BaseFragment() {
         _viewModel.onClear()
     }
 
+    @RequiresApi(Build.VERSION_CODES.Q)
     private fun checkPermissionsAndStartGeofencing() {
         if (foregroundAndBackgroundLocationPermissionApproved()) {
             checkDeviceLocationSettingsAndStartGeofence()
         } else {
-            requestForegroundAndBackgroundLocationPermissions()
+            requestForegroundLocationPermissions()
         }
     }
 
@@ -215,9 +217,14 @@ class SaveReminderFragment : BaseFragment() {
         locationSettingsResponseTask.addOnFailureListener { exception ->
             if (exception is ResolvableApiException && resolve) {
                 try {
-                    exception.startResolutionForResult(
-                        requireActivity(),
+                    this@SaveReminderFragment.startIntentSenderForResult(
+                        exception.resolution.intentSender,
                         REQUEST_TURN_DEVICE_LOCATION_ON,
+                        null,
+                        0,
+                        0,
+                        0,
+                        null,
                     )
                 } catch (sendEx: IntentSender.SendIntentException) {
                     Log.d(TAG, "Error getting location settings resolution: " + sendEx.message)
@@ -259,39 +266,6 @@ class SaveReminderFragment : BaseFragment() {
                 true
             }
         return foregroundLocationApproved && backgroundPermissionApproved
-    }
-
-    @TargetApi(29)
-    private fun requestForegroundAndBackgroundLocationPermissions() {
-        if (foregroundAndBackgroundLocationPermissionApproved()) {
-            return
-        }
-        val permissionsArray = arrayOf(Manifest.permission.ACCESS_FINE_LOCATION)
-        val resultCode = REQUEST_FOREGROUND_ONLY_PERMISSIONS_REQUEST_CODE
-        /** By my side I could not be able to show the native pop up to request the background location
-         * (I tried with my physical device and other emulators and that specific option does not appear :( )
-         * , instead of that as a solution I show a snackBar to request the user turn on the background location manually */
-        if (runningQOrLater) {
-            Snackbar.make(
-                requireActivity().findViewById(android.R.id.content),
-                getString(R.string.general_location_required),
-                Snackbar.LENGTH_SHORT,
-            )
-                .setAction(R.string.settings) {
-                    startActivity(
-                        Intent().apply {
-                            action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
-                            data = Uri.fromParts("package", BuildConfig.APPLICATION_ID, null)
-                            flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                        },
-                    )
-                }.show()
-        }
-        ActivityCompat.requestPermissions(
-            requireActivity(),
-            permissionsArray,
-            resultCode,
-        )
     }
 
     @SuppressLint("MissingPermission")
@@ -343,16 +317,37 @@ class SaveReminderFragment : BaseFragment() {
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.Q)
+    private fun requestForegroundLocationPermissions() {
+        if (foregroundAndBackgroundLocationPermissionApproved()) {
+            return
+        }
+        val permission = Manifest.permission.ACCESS_FINE_LOCATION
+        if (ContextCompat.checkSelfPermission(requireContext(), permission) != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(arrayOf(permission), REQUEST_FOREGROUND_ONLY_PERMISSIONS_REQUEST_CODE)
+        } else {
+            requestBackgroundLocationPermission()
+        }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.Q)
+    private fun requestBackgroundLocationPermission() {
+        if (runningQOrLater) {
+            val permission = Manifest.permission.ACCESS_BACKGROUND_LOCATION
+            if (ContextCompat.checkSelfPermission(requireContext(), permission) != PackageManager.PERMISSION_GRANTED) {
+                requestPermissions(arrayOf(permission), REQUEST_BACKGROUND_PERMISSION_RESULT_CODE)
+            }
+        }
+    }
+
     companion object {
-        private const val REQUEST_CODE_PERMISSION_NOTIFICATION = 123
         internal const val ACTION_GEOFENCE_EVENT =
             "ReminderListFragment.reminders.action.ACTION_GEOFENCE_EVENT"
     }
 }
 
-private const val REQUEST_FOREGROUND_AND_BACKGROUND_PERMISSION_RESULT_CODE = 33
+private const val REQUEST_CODE_PERMISSION_NOTIFICATION = 123
+private const val REQUEST_BACKGROUND_PERMISSION_RESULT_CODE = 33
 private const val REQUEST_FOREGROUND_ONLY_PERMISSIONS_REQUEST_CODE = 34
 private const val REQUEST_TURN_DEVICE_LOCATION_ON = 29
-private const val TAG = "HuntMainActivity"
-private const val LOCATION_PERMISSION_INDEX = 0
-private const val BACKGROUND_LOCATION_PERMISSION_INDEX = 1
+private const val TAG = "SaveReminderFragment"

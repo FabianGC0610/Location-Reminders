@@ -18,6 +18,7 @@ import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -78,14 +79,6 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
             if (result.resultCode == Activity.RESULT_OK) {
                 setupPermissionActivatedObserver()
                 _viewModel.setLocationPermissionActivated()
-            } else {
-                Snackbar.make(
-                    requireActivity().findViewById(android.R.id.content),
-                    R.string.location_required_error,
-                    Snackbar.LENGTH_INDEFINITE,
-                ).setAction(android.R.string.ok) {
-                    checkDeviceLocationSettingsAndStartGeofence()
-                }.show()
             }
         }
 
@@ -151,8 +144,7 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
     private fun setupPermissionActivatedObserver() {
         _viewModel.locationPermissionActivated.observe(viewLifecycleOwner) { permissionActivated ->
             if (permissionActivated) {
-                map.isMyLocationEnabled = true
-                Thread.sleep(2000)
+                Thread.sleep(500)
                 showCurrentLocation(map)
             }
         }
@@ -192,6 +184,15 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
     override fun onMapReady(googleMap: GoogleMap) {
         map = googleMap
 
+        map.isMyLocationEnabled = true
+        map.setOnMyLocationButtonClickListener {
+            if (_viewModel.locationPermissionActivated.value == true) {
+                showCurrentLocation(map)
+            } else {
+                checkDeviceLocationSettingsAndStartGeofence()
+            }
+            true
+        }
         setMapStyle(map)
         setMapClick(map)
         setPoiClick(map)
@@ -347,7 +348,6 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         }
         locationSettingsResponseTask.addOnCompleteListener {
             if (it.isSuccessful) {
-                map.isMyLocationEnabled = true
                 showCurrentLocation(map)
             }
         }
