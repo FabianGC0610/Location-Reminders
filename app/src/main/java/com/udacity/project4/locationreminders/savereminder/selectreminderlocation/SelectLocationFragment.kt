@@ -18,10 +18,10 @@ import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.databinding.DataBindingUtil
 import androidx.navigation.fragment.findNavController
@@ -68,6 +68,8 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
     private val requestLocationPermissionLauncher: ActivityResultLauncher<String> =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
             if (isGranted) {
+                setupMyLocationButton()
+                _viewModel.setLocationPermissionGranted()
                 checkDeviceLocationSettingsAndStartGeofence()
             } else {
                 _viewModel.setLocationPermissionIsNotGranted()
@@ -140,7 +142,6 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         }
     }
 
-    @SuppressLint("MissingPermission")
     private fun setupPermissionActivatedObserver() {
         _viewModel.locationPermissionActivated.observe(viewLifecycleOwner) { permissionActivated ->
             if (permissionActivated) {
@@ -184,18 +185,28 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
     override fun onMapReady(googleMap: GoogleMap) {
         map = googleMap
 
-        map.isMyLocationEnabled = true
-        map.setOnMyLocationButtonClickListener {
-            if (_viewModel.locationPermissionActivated.value == true) {
-                showCurrentLocation(map)
-            } else {
-                checkDeviceLocationSettingsAndStartGeofence()
-            }
-            true
+        if (ActivityCompat.checkSelfPermission(
+                requireContext(),
+                Manifest.permission.ACCESS_FINE_LOCATION,
+            ) == PackageManager.PERMISSION_GRANTED
+        ) {
+            setupMyLocationButton()
         }
         setMapStyle(map)
         setMapClick(map)
         setPoiClick(map)
+    }
+
+    @SuppressLint("MissingPermission")
+    fun setupMyLocationButton() {
+        map.isMyLocationEnabled = true
+        map.setOnMyLocationButtonClickListener {
+            checkDeviceLocationSettingsAndStartGeofence()
+            if (_viewModel.locationPermissionActivated.value == true) {
+                showCurrentLocation(map)
+            }
+            true
+        }
     }
 
     private fun showCurrentLocation(googleMap: GoogleMap) {
@@ -362,5 +373,3 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         _viewModel.onClearLocationFragment()
     }
 }
-
-private const val REQUEST_TURN_DEVICE_LOCATION_ON = 29
